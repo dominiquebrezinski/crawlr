@@ -1,0 +1,25 @@
+= Crawlr
+== A scriptable web crawler and content extractor
+
+Crawlr is a domain specific language (DSL) for crawling sites from a starting URL and extracting specific information from each page encountered. A history of pages crawled is stored in a database, and the extracted information is stored on a filesystem, optionally under version control (using git). For complex cases, like extracting downloadable files from a forum site, Crawlr provides methods for identifying page elements; extracting information from the element; and doing actions with the extracted information such as add a URL to the crawl targets, cache the information for use in subsequent requests, and make requests based on the information.
+
+Besides identifying common link mechanisms in HTML pages and adding them to the crawl targets, Crawlr offers the following methods:
+
+- authentication including HTTP Post-based authentication, including support for anti-CSRF form authenticators
+
+- information extraction from elements and/or element attributes using regular expressions or string matching and CSS selectors
+
+- caching extracted information for use in subsequent requests
+
+- making specific requests to URLs using cached and/or explicit information
+
+- storing pages accessed to the filesystem, using optional white or blacklist filters based on ContentType
+
+The goal is to provide extensible primitives sufficient for extracting information from complex sites, including sites that wrap links in javascript in onclick events. Information extraction from such sites will require analysis of the page structures, authentication mechanism and URL encodings, but Crawlr should provide sufficient mechanisms to create a crawling template for complex sites.
+
+== Dependencies
+
+- mysql for crawl history
+- datamapper ORM (ruby gem)
+- memcached
+- git and remote git repository - OPTIONAL 
