@@ -43,13 +43,11 @@ module Crawlr
     end
   end
   
-  class Bootstrap
-    def initialize(database = nil)
-      DataMapper::Logger.new($stdout, :debug)
-      DataMapper.setup(:default, database || Crawlr::load_database_parameters || 'mysql://root:n1h!lOne@localhost/crawlr?socket=/tmp/mysql.sock')
-      DataMapper.auto_migrate!
-      ::FileUtils.mkdir 'extracted', :mode => 0740
-    end
+  def self.bootstrap(database = nil)
+    DataMapper::Logger.new($stdout, :debug)
+    DataMapper.setup(:default, database || Crawlr::load_database_parameters)
+    DataMapper.auto_migrate!
+    ::FileUtils.mkdir 'extracted', :mode => 0750
   end
   
   class Processor
@@ -58,8 +56,8 @@ module Crawlr
     attr_reader :site, :site_agent
     
     def initialize(database = nil)
-      DataMapper::Logger.new($stdout, :debug)
-      DataMapper.setup(:default, database || Crawlr::load_database_parameters || 'mysql://root:n1h!lOne@localhost/crawlr?socket=/tmp/mysql.sock')
+      DataMapper::Logger.new($stdout, :warn)
+      DataMapper.setup(:default, database || Crawlr::load_database_parameters)
       unless File.exists? 'extracted'
         STDERR.print("Warning: the 'extracted' directory does not exist.\nHas the Crawlr been bootstrapped?")
         exit
@@ -122,13 +120,15 @@ module Crawlr
             f.write(page.body)
           end
         end
-        Crawlr::Page.first_or_create({:url => page.url, :hash => content_hash},
-                                     {:site_id => @site.id,
-                                      :url => page.url,
-                                      :hash => content_hash,
-                                      :stored_file => to_disk ? f_name : nil,
-                                      :content_type => page.content_type,
-                                      :visited_at => DateTime.now})
+        stored_page = Crawlr::Page.first_or_create({:url => page.url, :hash => content_hash},
+                                                   {:site_id => @site.id,
+                                                    :url => page.url,
+                                                    :hash => content_hash,
+                                                    :stored_file => to_disk ? f_name : nil,
+                                                    :content_type => page.content_type,
+                                                    :created_at => DateTime.now})
+        stored_page.visited_at = DateTime.now
+        stored_page.save
       else
         false
       end
@@ -154,11 +154,3 @@ module Spidr
   end
 end
 
-#Crawlr::Processor.new.start do |crawlr|
-#  crawlr.crawl_site('http://umindr.com') do |page|
-#    if m = page.regex_search(/network like a pro/i)
-#      puts "We seem to be working! #{m[0]}"
-#      #crawlr.store(page, true)
-#    end
-#  end
-#end
