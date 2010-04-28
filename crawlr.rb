@@ -22,9 +22,10 @@ module Crawlr
 
     property :id,           Serial
     property :url,          URI
-    property :hash,         String, :length => 40
+    property :hash,         String, :length => 64
     property :stored_file,  FilePath
     property :content_type, String
+    property :av_info,      String
     property :visited_at,   DateTime
     property :created_at,   DateTime
     
@@ -39,7 +40,7 @@ module Crawlr
     end
     
     def self.generate_hash(content)
-      Digest::SHA1.hexdigest(content) if content
+      Digest::SHA256.hexdigest(content) if content
     end
   end
   
@@ -82,7 +83,24 @@ module Crawlr
       unless site_agent
         create_agent_for_site(url, options)
       end
-      site_agent.start_at(url, &block)
+      if site_agent
+        site_agent.start_at(url, &block)
+      else
+        false
+      end
+    end
+    
+    def crawl_page(url, options = {}, &page_processor)
+      url = URI(url.to_s)
+      unless site_agent
+        create_agent_for_site(url, options)
+      end
+      if site_agent
+        page = site_agent.get_page(url)
+        page.is_ok? ? yield(page) : false
+      else
+        false
+      end
     end
     
     # Do form-based authentication for a site. Requires an initialized agent
@@ -111,7 +129,7 @@ module Crawlr
       end
     end
     
-    def store(page, to_disk = false)
+    def store(page, to_disk = false, av_info = nil)
       unless page.nil?
         content_hash = Crawlr::Page.generate_hash(page.body)
         if to_disk
@@ -126,6 +144,7 @@ module Crawlr
                                                     :hash => content_hash,
                                                     :stored_file => to_disk ? f_name : nil,
                                                     :content_type => page.content_type,
+                                                    :av_info => av_info,
                                                     :created_at => DateTime.now})
         stored_page.visited_at = DateTime.now
         stored_page.save
@@ -150,6 +169,10 @@ module Spidr
     def regex_search(regex)
       return nil if (body.nil? || body.empty?)
       regex.match(body)
+    end
+    
+    def content_type_class?(type_class)
+      is_content_type?(type_class)
     end
   end
 end
