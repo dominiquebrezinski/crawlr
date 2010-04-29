@@ -144,8 +144,12 @@ module Crawlr
         content_hash = Crawlr::Page.generate_hash(page.body)
         if to_disk
           f_name = File.expand_path("extracted/#{content_hash}")
-          File.open(f_name, File::CREAT|File::EXCL|File::WRONLY, 0640) do |f|
-            f.write(page.body)
+          begin
+            File.open(f_name, File::CREAT|File::EXCL|File::WRONLY, 0640) do |f|
+              f.write(page.body)
+            end
+          rescue Errno::EEXIST
+            STDERR.write "File already exists: #{content_hash}\n"
           end
         end
         stored_page = Crawlr::Page.first_or_create({:url => page.url, :hash => content_hash},
