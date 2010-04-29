@@ -133,7 +133,7 @@ module Crawlr
       Crawlr::Page.first :url => url
     end
     
-    def store(page, to_disk = false, av_info = nil)
+    def store(page, to_disk = false, av_info = '')
       unless page.nil?
         content_hash = Crawlr::Page.generate_hash(page.body)
         if to_disk
