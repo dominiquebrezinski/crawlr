@@ -25,7 +25,7 @@ module Crawlr
     property :hash,         String, :length => 64
     property :stored_file,  FilePath
     property :content_type, String
-    property :av_info,      String
+    property :av_info,      String, :length => 100
     property :visited_at,   DateTime
     property :created_at,   DateTime
     
@@ -143,8 +143,8 @@ module Crawlr
                                                     :url => page.url,
                                                     :hash => content_hash,
                                                     :stored_file => to_disk ? f_name : nil,
-                                                    :content_type => page.content_type,
-                                                    :av_info => av_info,
+                                                    :content_type => page.content_type[0,50],
+                                                    :av_info => av_info[0,100],
                                                     :created_at => DateTime.now})
         stored_page.visited_at = DateTime.now
         stored_page.save
