@@ -1,0 +1,7 @@
+production:
+  :adapter: mysql
+  :database: crawlr
+  :username: root
+  :password: 
+  :host: localhost
+  :socket: /tmp/mysql.sock

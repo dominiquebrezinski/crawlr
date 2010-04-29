@@ -1,0 +1,3 @@
+require 'crawlr'
+
+Crawlr::bootstrap

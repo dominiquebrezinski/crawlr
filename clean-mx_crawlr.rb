@@ -9,7 +9,7 @@ Crawlr::Processor.new.start do |crawlr|
           av_info = page.search("//tr[td[8][a[@href=\"#{href}\"]]]/td[7]/div/text()[last()]").first.to_s.split(/\xA0/).last
           crawlr.store(malware_page, true, av_info)
         end
-      end
+      end unless crawlr.stored? href
     end
   end
 end
