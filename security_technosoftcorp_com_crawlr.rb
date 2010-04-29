@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # this ones seems to yield mostly image, document and js exploits
 require 'crawlr'
 

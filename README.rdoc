@@ -1,25 +1,38 @@
-= Crawlr
-== A scriptable web crawler and content extractor
+== Crawlr
+== A web crawler and content extractor library
 
-Crawlr is a domain specific language (DSL) for crawling sites from a starting URL and extracting specific information from each page encountered. A history of pages crawled is stored in a database, and the extracted information is stored on a filesystem, optionally under version control (using git). For complex cases, like extracting downloadable files from a forum site, Crawlr provides methods for identifying page elements; extracting information from the element; and doing actions with the extracted information such as add a URL to the crawl targets, cache the information for use in subsequent requests, and make requests based on the information.
+Crawlr is a ruby-based domain specific language (DSL) for crawling sites and extracting specific information from each page encountered. Methods for storing page contents to disk and page meta-data to a database are also included. For complex cases, like extracting downloadable files from a forum site, Crawlr provides methods for identifying page elements; extracting information from the element; and doing actions with the extracted information such as add a URL to the crawl queue and/or do get or post HTTP requests. Cookies and related session context are stored.
 
-Besides identifying common link mechanisms in HTML pages and adding them to the crawl targets, Crawlr offers the following methods:
+Spidr (http://github.com/postmodern/spidr) is the core of Crawlr, and all its features and methods are exposed in the Crawlr namespace. Crawlr offers additional methods to:
 
-- authentication including HTTP Post-based authentication, including support for anti-CSRF form authenticators
+- do HTTP post-based authentication. Requires custom handler to extract fields from the form. Should be flexible enough to handle any form-based authentication mechanism.
 
-- information extraction from elements and/or element attributes using regular expressions or string matching and CSS selectors
+- extract information from the document, document elements and/or element attributes using regular expressions, XPath or CSS3 selectors.
 
-- caching extracted information for use in subsequent requests
+- store pages accessed to the filesystem and/or page meta-data to a database.
 
-- making specific requests to URLs using cached and/or explicit information
-
-- storing pages accessed to the filesystem, using optional white or blacklist filters based on ContentType
+- test the response content type class (text/, application/, etc.).
 
 The goal is to provide extensible primitives sufficient for extracting information from complex sites, including sites that wrap links in javascript in onclick events. Information extraction from such sites will require analysis of the page structures, authentication mechanism and URL encodings, but Crawlr should provide sufficient mechanisms to create a crawling template for complex sites.
 
 == Dependencies
 
-- mysql for crawl history
-- datamapper ORM (ruby gem)
-- memcached
-- git and remote git repository - OPTIONAL 
+- mysql (actually, any Datamapper supported db will work)
+- Datamapper ORM (gem install dm-core; gem install dm-types)
+- Spidr (gem install spidr)
+
+== Usage
+
+1. A database must be created, and this document will assume it is called crawlr.
+
+2. Copy database.yml.example to database.yml and edit the file with the specifics of the database connection, credentials and name. Refer to http://datamapper.org/docs/ for more info on database connection configuration. database.yml is a YAML file that will imported into a ruby hash suitable for passing to DataMapper.setup.
+
+3. Files found in the crawls will be written to ./extracted in the directory the script is run in. Copy crawlr.rb, database.yml, bootstrap.rb and the site script into an appropriate directory.
+
+4. IF Crawlr has NEVER BEEN BOOTSTRAPPED, meaning the tables have not been created in the database, run './bootstrap.rb' OTHERWISE create the extract directory by running 'mkdir extracted'.
+
+5. If the site you need to crawl requires authentication or a unique, authenticated URL, edit the site script to use your credentials or URL.
+
+6. Run the site script as './<script name>' or 'ruby <script name>'. The current site scripts print the URL they are trying to retrieve malware from to STDOUT.
+
+Any files found are written to the extracted directory using their SHA256 hex-digest as the file name. There will be a corresponding entry in the crawlr_pages table that includes the URL it was downloaded from, the SHA256 hash of the file, the absolute path name to the file, the content type from the HTTP response (trust as you may) and any information about the malware (taxonomy name etc.) if the source site supplied it.

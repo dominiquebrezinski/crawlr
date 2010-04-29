@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'crawlr'
 
 Crawlr::Processor.new.start do |crawlr|

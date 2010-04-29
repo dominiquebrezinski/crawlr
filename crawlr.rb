@@ -45,10 +45,16 @@ module Crawlr
   end
   
   def self.bootstrap(database = nil)
-    DataMapper::Logger.new($stdout, :debug)
-    DataMapper.setup(:default, database || Crawlr::load_database_parameters)
-    DataMapper.auto_migrate!
-    ::FileUtils.mkdir 'extracted', :mode => 0750
+    begin
+      ::FileUtils.mkdir 'extracted', :mode => 0750
+      DataMapper::Logger.new($stdout, :debug)
+      DataMapper.setup(:default, database || Crawlr::load_database_parameters)
+      # this is does a drop table and is destructive
+      DataMapper.auto_migrate!
+      puts "Crawlr is bootstrapped and ready to rock!"
+    rescue Errno::EEXIST
+      STDERR.write "It appears Crawlr has been bootstrapped already.\n"
+    end
   end
   
   class Processor
