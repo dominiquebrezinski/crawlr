@@ -2,7 +2,7 @@
 # this ones seems to yield mostly image, document and js exploits
 require 'crawlr'
 
-Crawlr::Processor.new.start do |crawlr|
+Crawlr::Processor.new(ARGV[0]).start do |crawlr|
   crawlr.crawl_page('http://security.technosoftcorp.com/ss/ss_frame_exploit_url.htm') do |page|
     page.search('//table[@class="vuldisp"]//tr/td[1]/text()').each do |href|
       url = href.to_s.split.first

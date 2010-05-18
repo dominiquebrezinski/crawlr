@@ -9,8 +9,8 @@ module Crawlr
   class Site
     include DataMapper::Resource
     
-    property :id,               Serial
-    property :url,              URI
+    property :id,               Serial, :unique_index => :id
+    property :url,              URI, :index => true
     property :last_visited_at,  DateTime
     property :created_at,       DateTime
     
@@ -20,9 +20,9 @@ module Crawlr
   class Page
     include DataMapper::Resource
 
-    property :id,           Serial
-    property :url,          URI
-    property :hash,         String, :length => 64
+    property :id,           Serial, :unique_index => :id
+    property :url,          URI, :index => true
+    property :hash,         String, :length => 64, :index => true
     property :stored_file,  FilePath
     property :content_type, String
     property :av_info,      String, :length => 100
@@ -44,9 +44,9 @@ module Crawlr
     end
   end
   
-  def self.bootstrap(database = nil)
+  def self.bootstrap(extract_dir = 'extracted', database = nil)
     begin
-      ::FileUtils.mkdir 'extracted', :mode => 0750
+      ::FileUtils.mkdir extract_dir, :mode => 0750
       DataMapper::Logger.new($stdout, :debug)
       DataMapper.setup(:default, database || Crawlr::load_database_parameters)
       # this is does a drop table and is destructive
@@ -62,10 +62,11 @@ module Crawlr
     
     attr_reader :site, :site_agent
     
-    def initialize(database = nil)
+    def initialize(extract_dir = nil, database = nil)
       DataMapper::Logger.new($stdout, :warn)
       DataMapper.setup(:default, database || Crawlr::load_database_parameters)
-      unless File.exists? 'extracted'
+      @extract_dir = extract_dir || 'extracted'
+      unless File.exists? @extract_dir
         STDERR.print("Warning: the 'extracted' directory does not exist.\nHas the Crawlr been bootstrapped?")
         exit
       end
@@ -143,7 +144,7 @@ module Crawlr
       unless page.nil?
         content_hash = Crawlr::Page.generate_hash(page.body)
         if to_disk
-          f_name = File.expand_path("extracted/#{content_hash}")
+          f_name = File.expand_path("#{@extract_dir}/#{content_hash}")
           begin
             File.open(f_name, File::CREAT|File::EXCL|File::WRONLY, 0640) do |f|
               f.write(page.body)

@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 require 'crawlr'
-
-Crawlr::Processor.new.start do |crawlr|
+# first commandline arg is the list or urls to fetch
+# optional second commandline argument is the extract directory to use
+Crawlr::Processor.new(ARGV[1]).start do |crawlr|
   if ARGV[0]
     File.open(File.expand_path(ARGV[0]), 'r') do |f|
       f.each_line do |line|
