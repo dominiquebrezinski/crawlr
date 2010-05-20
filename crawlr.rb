@@ -196,7 +196,7 @@ module Spidr
       url = URI(url.to_s)
 
       prepare_request(url) do |session,path,headers|
-        SystemTimer.timeout_after(timeout.seconds) do
+        SystemTimer.timeout_after(timeout.to_f) do
           new_page = Page.new(url,session.get(path,headers))
         end
         
