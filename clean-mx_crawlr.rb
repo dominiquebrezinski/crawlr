@@ -3,6 +3,7 @@ require 'crawlr'
 # use the first agrument as the extract directory if it is present
 Crawlr::Processor.new(ARGV[0]).start do |crawlr|
   crawlr.crawl_page('http://support.clean-mx.de/clean-mx/viruses') do |page|
+    puts "Got top page"
     page.search('//tr/td[8]//a[@title="open Url in new Browser at your own risk !"][1]/@href').each do |href|
       puts "Fetching #{href}"
       crawlr.site_agent.get_page(href) do |malware_page|

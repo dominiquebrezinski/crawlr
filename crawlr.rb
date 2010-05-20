@@ -105,7 +105,7 @@ module Crawlr
       end
       if site_agent
         page = site_agent.get_page(url)
-        page.is_ok? ? yield(page) : false
+        (page && page.is_ok?) ? yield(page) : false
       else
         false
       end
@@ -196,15 +196,17 @@ module Spidr
       url = URI(url.to_s)
 
       prepare_request(url) do |session,path,headers|
+        new_page = nil
         SystemTimer.timeout_after(timeout.to_f) do
           new_page = Page.new(url,session.get(path,headers))
         end
-        
-        # save any new cookies
-        @cookies.from_page(new_page)
+        unless new_page.nil?
+          # save any new cookies
+          @cookies.from_page(new_page)
 
-        yield new_page if block_given?
-        return new_page
+          yield new_page if block_given?
+          new_page
+        end
       end
     end
   end
