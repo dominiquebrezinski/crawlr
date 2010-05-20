@@ -4,6 +4,7 @@ require 'dm-types'
 require 'spidr'
 require 'digest'
 require 'fileutils'
+require 'system_timer'
 
 module Crawlr
   class Site
@@ -188,6 +189,23 @@ module Spidr
     
     def content_type_class?(type_class)
       is_content_type?(type_class)
+    end
+  end
+  class Agent
+    def get_page(url, timeout = 60)
+      url = URI(url.to_s)
+
+      prepare_request(url) do |session,path,headers|
+        SystemTimer.timeout_after(timeout.seconds) do
+          new_page = Page.new(url,session.get(path,headers))
+        end
+        
+        # save any new cookies
+        @cookies.from_page(new_page)
+
+        yield new_page if block_given?
+        return new_page
+      end
     end
   end
 end
