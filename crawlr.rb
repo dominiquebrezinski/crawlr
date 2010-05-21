@@ -7,6 +7,8 @@ require 'fileutils'
 require 'system_timer'
 
 module Crawlr
+  DOWNLOAD_BYTE_LIMIT = 10485760 # 10 MB
+  
   class Site
     include DataMapper::Resource
     
@@ -190,6 +192,10 @@ module Spidr
     def content_type_class?(type_class)
       is_content_type?(type_class)
     end
+    
+    def content_length
+      (@response['Content-Length'] || 0).to_i
+    end
   end
   class Agent
     def get_page(url, timeout = 60)
@@ -210,6 +216,27 @@ module Spidr
           yield new_page if block_given?
           new_page
         end
+      end
+    end
+    
+    def head_page(url, timeout = 3)
+      begin
+        url = URI(url.to_s)
+      rescue URI::InvalidURIError
+        return nil
+      end
+      prepare_request(url) do |session,path,headers|
+        new_page = nil
+        SystemTimer.timeout_after(timeout.to_f) do
+          new_page = Page.new(url,session.head(path,headers))
+        end
+        unless new_page.nil?
+          # save any new cookies
+          @cookies.from_page(new_page)
+
+          yield new_page if block_given?
+        end
+        new_page
       end
     end
   end
