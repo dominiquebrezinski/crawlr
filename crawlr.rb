@@ -160,7 +160,7 @@ module Crawlr
                                                     :hash => content_hash,
                                                     :stored_file => to_disk ? f_name : nil,
                                                     :content_type => page.content_type[0,50],
-                                                    :av_info => av_info[0,100],
+                                                    :av_info => (av_info || '').to_s[0,100],
                                                     :created_at => DateTime.now})
         stored_page.visited_at = DateTime.now
         stored_page.save
@@ -193,8 +193,11 @@ module Spidr
   end
   class Agent
     def get_page(url, timeout = 60)
-      url = URI(url.to_s)
-
+      begin
+        url = URI(url.to_s)
+      rescue URI::InvalidURIError
+        return nil
+      end
       prepare_request(url) do |session,path,headers|
         new_page = nil
         SystemTimer.timeout_after(timeout.to_f) do
