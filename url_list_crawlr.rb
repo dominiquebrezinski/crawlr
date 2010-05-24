@@ -10,10 +10,17 @@ Crawlr::Processor.new(ARGV[1]).start do |crawlr|
           url = line ? line.strip : ''
           unless url.empty? || crawlr.stored?(url)
             puts "Fetching #{url}"
-            crawlr.crawl_page(url) do |malware_page|
-              if malware_page.is_ok? && !malware_page.content_type_class?('text/')
-                crawlr.store(malware_page, true)
+            page = crawlr.site_agent.head_page(url)
+            if page && page.content_length < Crawlr::DOWNLOAD_BYTE_LIMIT
+              crawlr.crawl_page(url) do |malware_page|
+                if malware_page.is_ok? && !malware_page.content_type_class?('text/')
+                  crawlr.store(malware_page, true)
+                else
+                  crawlr.store(malware_page || page)
+                end
               end
+            else
+              crawlr.seen(url)
             end
           end
         rescue

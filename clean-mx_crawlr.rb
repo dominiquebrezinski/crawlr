@@ -14,8 +14,12 @@ Crawlr::Processor.new(ARGV[0]).start do |crawlr|
             if malware_page.is_ok? && !malware_page.content_type_class?('text/')
               av_info = page.search("//tr[td[8][a[@href=\"#{href}\"]]]/td[7]/div/text()[last()]").first.to_s.split(/\xA0/).last
               crawlr.store(malware_page, true, av_info)
+            else
+              crawlr.store(malware_page || page)
             end
           end
+        else
+          crawlr.seen(href)
         end
       end
     end

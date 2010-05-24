@@ -29,8 +29,8 @@ module Crawlr
     property :stored_file,  FilePath
     property :content_type, String
     property :av_info,      String, :length => 100
-    property :visited_at,   DateTime
-    property :created_at,   DateTime
+    property :visited_at,   DateTime, :index => true
+    property :created_at,   DateTime, :index => true
     
     belongs_to :site
     
@@ -169,6 +169,15 @@ module Crawlr
       else
         false
       end
+    end
+    
+    def seen(url)
+      stored_page = Crawlr::Page.first_or_create({:url => url},
+                                                 {:site_id => @site.id,
+                                                  :url => url,
+                                                  :created_at => DateTime.now})
+      stored_page.visited_at = DateTime.now
+      stored_page.save
     end
   end
   

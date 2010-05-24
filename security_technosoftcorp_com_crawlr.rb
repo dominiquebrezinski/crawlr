@@ -14,10 +14,14 @@ Crawlr::Processor.new(ARGV[0]).start do |crawlr|
           crawlr.site_agent.get_page(url) do |malware_page|
             if malware_page.is_ok? && !malware_page.content_type_class?('text/')
               crawlr.store(malware_page, true)
+            else
+              crawlr.store(malware_page || page)
             end
           end unless crawlr.stored? url
           rescue
           end
+        else
+          crawlr.seen(url)
         end
       end
     end
